@@ -21,6 +21,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
 
@@ -81,9 +82,21 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             saveSettings()
+            statusText.text = getString(R.string.status_changing_now)
+
             val request = OneTimeWorkRequestBuilder<WallpaperWorker>().build()
             WorkManager.getInstance(this).enqueue(request)
-            statusText.text = getString(R.string.status_changing_now)
+
+            WorkManager.getInstance(this).getWorkInfoByIdLiveData(request.id)
+                .observe(this) { workInfo ->
+                    if (workInfo != null && workInfo.state.isFinished) {
+                        if (workInfo.state == WorkInfo.State.SUCCEEDED) {
+                            statusText.text = "Success! Wallpaper changed."
+                        } else if (workInfo.state == WorkInfo.State.FAILED) {
+                            statusText.text = "Failed. Check URL or Internet."
+                        }
+                    }
+                }
         }
 
         try {
