@@ -23,7 +23,11 @@ class WallpaperWorker(
             val setHome = prefs.getBoolean("set_home", true)
             val setLock = prefs.getBoolean("set_lock", true)
 
-            val targetUrl = if (customUrl.isNullOrEmpty()) DEFAULT_IMAGE else customUrl
+            var targetUrl = if (customUrl.isNullOrEmpty()) DEFAULT_IMAGE else customUrl
+
+            if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+                targetUrl = "https://$targetUrl"
+            }
 
             val bitmap = downloadImage(targetUrl) ?: return@withContext Result.retry()
             
@@ -43,7 +47,7 @@ class WallpaperWorker(
             NotificationHelper.showWallpaperChanged(applicationContext)
             Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            Result.failure()
         }
     }
 
