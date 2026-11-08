@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">WALLPAPER88</string>
+    <string name="title">WALLPAPER88</string>
+    <string name="subtitle">Automatic wallpaper changer</string>
+    <string name="interval_label">Change interval</string>
+    <string name="interval_30m">Every 30 minutes</string>
+    <string name="interval_6h">Every 6 hours</string>
+    <string name="interval_1d">Every day</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="status_idle">Not running</string>
+    <string name="status_running">Running: %1$s</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="screen_info">Screen target: %1$d × %2$d px</string>
+    <string name="notification_channel_name">Wallpaper changes</string>
+    <string name="notification_title">WALLPAPER88</string>
+    <string name="notification_text">Wallpaper changed.</string>
+    <string name="copyright">© MC88</string>
+</resources>
