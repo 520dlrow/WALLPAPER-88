@@ -3,7 +3,9 @@ package com.mc88.wallpaper88
 import android.Manifest
 import android.app.WallpaperManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
@@ -32,9 +34,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var apiInput: EditText
     private lateinit var checkHome: CheckBox
     private lateinit var checkLock: CheckBox
+    private lateinit var folderStatus: TextView
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    private val folderPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+            if (uri != null) {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                val prefs = getSharedPreferences("Wallpaper88Prefs", Context.MODE_PRIVATE)
+                prefs.edit().putString("local_folder_uri", uri.toString()).apply()
+                updateFolderStatus()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         apiInput = findViewById(R.id.apiInput)
         checkHome = findViewById(R.id.checkHome)
         checkLock = findViewById(R.id.checkLock)
+        folderStatus = findViewById(R.id.folderStatus)
 
         loadSettings()
 
@@ -53,6 +70,16 @@ class MainActivity : AppCompatActivity() {
                 != PackageManager.PERMISSION_GRANTED) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
+        }
+
+        findViewById<Button>(R.id.selectFolderButton).setOnClickListener {
+            folderPickerLauncher.launch(null)
+        }
+
+        findViewById<Button>(R.id.clearFolderButton).setOnClickListener {
+            val prefs = getSharedPreferences("Wallpaper88Prefs", Context.MODE_PRIVATE)
+            prefs.edit().remove("local_folder_uri").apply()
+            updateFolderStatus()
         }
 
         findViewById<Button>(R.id.startButton).setOnClickListener {
@@ -93,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                         if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                             statusText.text = "Success! Wallpaper changed."
                         } else if (workInfo.state == WorkInfo.State.FAILED) {
-                            statusText.text = "Failed. Check URL or Internet."
+                            statusText.text = "Failed. Check Folder or URL."
                         }
                     }
                 }
@@ -114,6 +141,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateFolderStatus() {
+        val prefs = getSharedPreferences("Wallpaper88Prefs", Context.MODE_PRIVATE)
+        val folderUri = prefs.getString("local_folder_uri", null)
+        if (folderUri != null) {
+            folderStatus.text = getString(R.string.folder_selected)
+            folderStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
+        } else {
+            folderStatus.text = getString(R.string.no_folder_selected)
+            folderStatus.setTextColor(ContextCompat.getColor(this, R.color.gray))
+        }
+    }
+
     private fun saveSettings() {
         val prefs = getSharedPreferences("Wallpaper88Prefs", Context.MODE_PRIVATE)
         prefs.edit()
@@ -129,17 +168,22 @@ class MainActivity : AppCompatActivity() {
         checkHome.isChecked = prefs.getBoolean("set_home", true)
         checkLock.isChecked = prefs.getBoolean("set_lock", true)
         findViewById<RadioButton>(R.id.radio30m).isChecked = true
+        updateFolderStatus()
     }
 
     private fun scheduleWorker(intervalMinutes: Long) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        val prefs = getSharedPreferences("Wallpaper88Prefs", Context.MODE_PRIVATE)
+        val hasLocalFolder = prefs.getString("local_folder_uri", null) != null
+
+        val constraintsBuilder = Constraints.Builder()
+        if (!hasLocalFolder) {
+            constraintsBuilder.setRequiredNetworkType(NetworkType.CONNECTED)
+        }
 
         val request = PeriodicWorkRequestBuilder<WallpaperWorker>(
             intervalMinutes, TimeUnit.MINUTES
         )
-            .setConstraints(constraints)
+            .setConstraints(constraintsBuilder.build())
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
