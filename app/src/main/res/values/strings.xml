@@ -6,11 +6,26 @@
     <string name="interval_30m">Every 30 minutes</string>
     <string name="interval_6h">Every 6 hours</string>
     <string name="interval_1d">Every day</string>
+    
+    <string name="custom_api_label">Custom API URL (Optional)</string>
+    <string name="custom_api_hint">https://picsum.photos/1080/1920</string>
+    <string name="custom_api_desc">Leave empty to use default wallpapers</string>
+    
+    <string name="screens_label">Apply to:</string>
+    <string name="screen_home">Home Screen</string>
+    <string name="screen_lock">Lock Screen</string>
+    
     <string name="start">Start</string>
     <string name="stop">Stop</string>
+    <string name="change_now">Change Now</string>
+    
     <string name="status_idle">Not running</string>
     <string name="status_running">Running: %1$s</string>
     <string name="status_stopped">Stopped</string>
+    <string name="status_changing_now">Fetching and changing...</string>
+    <string name="status_no_screen">Please select at least one screen</string>
+    <string name="status_download_failed">Download failed. Check URL.</string>
+    
     <string name="screen_info">Screen target: %1$d × %2$d px</string>
     <string name="notification_channel_name">Wallpaper changes</string>
     <string name="notification_title">WALLPAPER88</string>
